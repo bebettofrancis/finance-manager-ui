@@ -1,0 +1,14 @@
+#expenses-grid {
+  width: 100%;
+}
+
+#expenses-grid,
+#expenses-grid th,
+#expenses-grid td {
+  border-style: solid;
+  border-collapse: collapse;
+}
+
+#expenses-grid td {
+  text-align: end;
+}
