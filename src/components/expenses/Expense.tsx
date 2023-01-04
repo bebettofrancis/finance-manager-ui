@@ -5,13 +5,12 @@ const Expense: React.FC<{
   expense: ExpenseHttpResponse;
   index: number;
 }> = ({ expense, index }) => {
-  const expenseDate = new Date(expense.date);
   return (
     <tr>
       <td>{index + 1}</td>
       <td>{expense.categoryId}</td>
       <td>{expense.amount}</td>
-      <td>{expenseDate.toString()}</td>
+      <td>{expense.date}</td>
     </tr>
   );
 };
