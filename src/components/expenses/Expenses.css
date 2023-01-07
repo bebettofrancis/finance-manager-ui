@@ -1,14 +1,26 @@
-#expenses-grid {
+.expenses-grid {
   width: 100%;
 }
 
-#expenses-grid,
-#expenses-grid th,
-#expenses-grid td {
+.expenses-grid,
+.expenses-grid th,
+.expenses-grid td {
   border-style: solid;
   border-collapse: collapse;
 }
 
-#expenses-grid td {
+.expenses-grid td {
   text-align: end;
+}
+
+.add-expense-section {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.save-expenses-section {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
 }

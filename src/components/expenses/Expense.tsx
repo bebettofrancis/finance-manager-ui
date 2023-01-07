@@ -1,16 +1,27 @@
 import React from "react";
-import ExpenseHttpResponse from "../../types/expense-http-response";
+import ExpenseProps from "../../types/expense-props";
 
 const Expense: React.FC<{
-  expense: ExpenseHttpResponse;
+  expense: ExpenseProps;
   index: number;
-}> = ({ expense, index }) => {
+  removeExpenseHandler(index: number): void;
+}> = ({ expense, index, removeExpenseHandler }) => {
+  const removeExpense = () => {
+    removeExpenseHandler(index);
+  };
+
   return (
     <tr>
       <td>{index + 1}</td>
       <td>{expense.categoryId}</td>
       <td>{expense.amount}</td>
       <td>{expense.date}</td>
+      <td>{expense.comment}</td>
+      <td>
+        <button type="button" onClick={removeExpense}>
+          x
+        </button>
+      </td>
     </tr>
   );
 };
