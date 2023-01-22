@@ -28,7 +28,7 @@ const Expenses = () => {
       data.categories.forEach(
         (element) => (categories[element.id] = { name: element.name })
       );
-    setExpensesMetadata(data);
+    setExpensesMetadata(categories);
   };
 
   const getExpenses = async () => {
