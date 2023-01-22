@@ -1,60 +1,66 @@
+import { cloneDeep, uniqueId } from "lodash";
 import React, { useEffect, useState } from "react";
-import ExpenseProps from "../../types/expenses/expense-props";
-import ExpenseHttpResponse from "../../types/expenses/expense-http-response";
-import HttpResponse from "../../types/http-response";
+import ExpenseProps from "../../types/expenses/ExpenseProps";
+import ExpensesMetadata from "../../types/expenses/ExpensesMetadata";
+import GetExpenses from "../../types/expenses/http/GetExpenses";
+import GetExpensesMetadata from "../../types/expenses/http/GetExpensesMetadata";
+import HttpResponse from "../../types/HttpResponse";
 import Expense from "./Expense";
 import "./Expenses.css";
-import { cloneDeep, uniqueId } from "lodash";
-import ExpenseMetadata from "../../types/expenses/expense-metadata";
 
 const Expenses = () => {
-  const [metadata, setMetadata] = useState<ExpenseMetadata | null>(null);
+  const [expensesMetadata, setExpensesMetadata] =
+    useState<ExpensesMetadata | null>(null);
   const [expenses, setExpenses] = useState<ExpenseProps[] | null>(null);
 
-  useEffect(() => {
-    const getMetadata = async () => {
-      const response: HttpResponse<ExpenseMetadata | null> = await fetch(
-        "http://localhost:8080/api/v1/expenses/metadata"
-      )
-        .then((resp) => resp.json())
-        .catch((err) => console.error(err));
-      const { data } = response;
-      if (data == null) {
-        return;
-      }
-      setMetadata(data);
-    };
-
-    const getExpenses = async () => {
-      const response: HttpResponse<{
-        expenses: ExpenseHttpResponse[] | null;
-      }> = await fetch("http://localhost:8080/api/v1/expenses")
-        .then((resp) => resp.json())
-        .catch((err) => console.error(err));
-      const { data } = response;
-      const expensesResponse = data.expenses;
-      if (expensesResponse == null) {
-        return;
-      }
-      setExpenses(
-        expensesResponse.map(
-          (expenseResponse) =>
-            ({
-              id: `expense-${expenseResponse.id}`,
-              categoryId: expenseResponse.categoryId,
-              comment: expenseResponse.comment,
-              date: expenseResponse.date,
-              amount: expenseResponse.amount,
-            } as ExpenseProps)
-        )
+  const getExpensesMetadata = async () => {
+    const response: HttpResponse<GetExpensesMetadata | null> = await fetch(
+      "http://localhost:8080/api/v1/expenses/metadata"
+    )
+      .then((resp) => resp.json())
+      .catch((err) => console.error(err));
+    const { data } = response;
+    if (data === null) {
+      return;
+    }
+    const categories: ExpensesMetadata | null = {};
+    data.categories &&
+      data.categories.forEach(
+        (element) => (categories[element.id] = { name: element.name })
       );
-    };
+    setExpensesMetadata(data);
+  };
 
+  const getExpenses = async () => {
+    const response: HttpResponse<GetExpenses> = await fetch(
+      "http://localhost:8080/api/v1/expenses"
+    )
+      .then((resp) => resp.json())
+      .catch((err) => console.error(err));
+    const { data } = response;
+    const expensesResponse = data.expenses;
+    if (expensesResponse === null) {
+      return;
+    }
+    setExpenses(
+      expensesResponse.map(
+        (expenseResponse) =>
+          ({
+            id: `expense-${expenseResponse.id}`,
+            categoryId: expenseResponse["category-id"],
+            comment: expenseResponse.comment,
+            date: expenseResponse.date,
+            amount: expenseResponse.amount,
+          } as ExpenseProps)
+      )
+    );
+  };
+
+  useEffect(() => {
     const getData = async () => {
-      await getMetadata();
+      await getExpensesMetadata();
       await getExpenses();
     };
-
     getData();
   }, []);
 
@@ -111,9 +117,9 @@ const Expenses = () => {
               {expenses &&
                 expenses.map((expense, index) => (
                   <Expense
-                    expense={expense}
+                    expenseProps={expense}
                     index={index}
-                    metadata={metadata}
+                    expensesMetadata={expensesMetadata}
                     removeExpenseHandler={removeExpense}
                     key={expense.id}
                   />

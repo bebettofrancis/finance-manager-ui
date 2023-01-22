@@ -1,13 +1,13 @@
 import React from "react";
-import ExpenseMetadata from "../../types/expenses/expense-metadata";
-import ExpenseProps from "../../types/expenses/expense-props";
+import ExpenseProps from "../../types/expenses/ExpenseProps";
+import ExpensesMetadata from "../../types/expenses/ExpensesMetadata";
 
 const Expense: React.FC<{
-  expense: ExpenseProps;
+  expenseProps: ExpenseProps;
   index: number;
-  metadata: ExpenseMetadata | null;
+  expensesMetadata: ExpensesMetadata | null;
   removeExpenseHandler(index: number): void;
-}> = ({ expense, index, metadata, removeExpenseHandler }) => {
+}> = ({ expenseProps, index, expensesMetadata, removeExpenseHandler }) => {
   const removeExpense = () => {
     removeExpenseHandler(index);
   };
@@ -16,15 +16,11 @@ const Expense: React.FC<{
     <tr>
       <td>{index + 1}</td>
       <td>
-        {
-          metadata?.categories.find(
-            (element) => element.id === expense.categoryId
-          )?.name
-        }
+        {expensesMetadata && expensesMetadata[expenseProps.categoryId].name}
       </td>
-      <td>{expense.amount}</td>
-      <td>{expense.date}</td>
-      <td>{expense.comment}</td>
+      <td>{expenseProps.amount}</td>
+      <td>{expenseProps.date}</td>
+      <td>{expenseProps.comment}</td>
       <td>
         <button type="button" onClick={removeExpense}>
           x
