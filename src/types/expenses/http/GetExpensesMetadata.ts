@@ -1,4 +1,4 @@
-import ExpenseCategory from "./ExpenseCategory";
+import ExpenseCategory from "../ExpenseCategory";
 
 type GetExpensesMetadata = {
   categories: ExpenseCategory[] | null;

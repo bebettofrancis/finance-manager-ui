@@ -1,4 +1,4 @@
-import Expense from "./Expense";
+import Expense from "../Expense";
 
 type GetExpenses = {
   expenses: Expense[] | null;

@@ -1,5 +1,7 @@
+import ExpenseCategory from "./ExpenseCategory";
+
 type ExpensesMetadata = {
-  [key: number]: { name: string };
+  categories: ExpenseCategory[] | null;
 };
 
 export default ExpensesMetadata;

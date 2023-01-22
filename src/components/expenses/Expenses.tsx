@@ -5,6 +5,7 @@ import ExpensesMetadata from "../../types/expenses/ExpensesMetadata";
 import GetExpenses from "../../types/expenses/http/GetExpenses";
 import GetExpensesMetadata from "../../types/expenses/http/GetExpensesMetadata";
 import HttpResponse from "../../types/HttpResponse";
+import { makeRequest } from "../../utils/HttpUtils";
 import Expense from "./Expense";
 import "./Expenses.css";
 
@@ -14,29 +15,19 @@ const Expenses = () => {
   const [expenses, setExpenses] = useState<ExpenseProps[] | null>(null);
 
   const getExpensesMetadata = async () => {
-    const response: HttpResponse<GetExpensesMetadata | null> = await fetch(
-      "http://localhost:8080/api/v1/expenses/metadata"
-    )
-      .then((resp) => resp.json())
-      .catch((err) => console.error(err));
+    const response: HttpResponse<GetExpensesMetadata | null> =
+      await makeRequest("http://localhost:8080/api/v1/expenses/metadata");
     const { data } = response;
     if (data === null) {
       return;
     }
-    const categories: ExpensesMetadata | null = {};
-    data.categories &&
-      data.categories.forEach(
-        (element) => (categories[element.id] = { name: element.name })
-      );
-    setExpensesMetadata(categories);
+    setExpensesMetadata(data);
   };
 
   const getExpenses = async () => {
-    const response: HttpResponse<GetExpenses> = await fetch(
+    const response: HttpResponse<GetExpenses> = await makeRequest(
       "http://localhost:8080/api/v1/expenses"
-    )
-      .then((resp) => resp.json())
-      .catch((err) => console.error(err));
+    );
     const { data } = response;
     const expensesResponse = data.expenses;
     if (expensesResponse === null) {
@@ -86,7 +77,7 @@ const Expenses = () => {
     setExpenses(clonedExpenses);
   };
 
-  const saveExpenses = (e: React.SyntheticEvent) => {
+  const saveExpenses = (e: React.FormEvent) => {
     e.preventDefault();
     fetch("http://localhost:8080/api/v1/expenses", {
       method: "PATCH",
