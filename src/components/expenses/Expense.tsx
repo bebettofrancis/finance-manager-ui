@@ -1,11 +1,13 @@
 import React from "react";
-import ExpenseProps from "../../types/expense-props";
+import ExpenseMetadata from "../../types/expenses/expense-metadata";
+import ExpenseProps from "../../types/expenses/expense-props";
 
 const Expense: React.FC<{
   expense: ExpenseProps;
   index: number;
+  metadata: ExpenseMetadata | null;
   removeExpenseHandler(index: number): void;
-}> = ({ expense, index, removeExpenseHandler }) => {
+}> = ({ expense, index, metadata, removeExpenseHandler }) => {
   const removeExpense = () => {
     removeExpenseHandler(index);
   };
@@ -13,7 +15,13 @@ const Expense: React.FC<{
   return (
     <tr>
       <td>{index + 1}</td>
-      <td>{expense.categoryId}</td>
+      <td>
+        {
+          metadata?.categories.find(
+            (element) => element.id === expense.categoryId
+          )?.name
+        }
+      </td>
       <td>{expense.amount}</td>
       <td>{expense.date}</td>
       <td>{expense.comment}</td>
