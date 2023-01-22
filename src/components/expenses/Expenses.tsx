@@ -4,11 +4,10 @@ import ExpenseHttpResponse from "../../types/expense-http-response";
 import HttpResponse from "../../types/http-response";
 import Expense from "./Expense";
 import "./Expenses.css";
-import { cloneDeep } from "lodash";
+import { cloneDeep, uniqueId } from "lodash";
 
 const Expenses = () => {
   const [expenses, setExpenses] = useState<ExpenseProps[] | null>(null);
-  const [newExpenseId, setNewExpenseId] = useState<number>(0);
 
   useEffect(() => {
     const getExpenses = async () => {
@@ -40,13 +39,12 @@ const Expenses = () => {
 
   const addExpense = () => {
     const newExpense: ExpenseProps = {
-      id: "new-expense-" + newExpenseId,
+      id: uniqueId("new-expense-"),
       categoryId: 1,
       comment: "",
       date: "",
       amount: 0,
     };
-    setNewExpenseId((prev) => prev + 1);
     setExpenses((prev) =>
       prev === null ? [newExpense] : [...cloneDeep(prev), newExpense]
     );
