@@ -68,6 +68,17 @@ const Expenses = () => {
     );
   };
 
+  const updateExpense = (index: number, expense: ExpenseProps) => {
+    setExpenses((prev) => {
+      if (prev === null || index >= prev.length) {
+        return prev;
+      }
+      const clonedExpenses = cloneDeep(prev);
+      clonedExpenses[index] = expense;
+      return clonedExpenses;
+    });
+  };
+
   const removeExpense = (index: number) => {
     const clonedExpenses = cloneDeep(expenses);
     if (clonedExpenses == null) {
@@ -77,7 +88,7 @@ const Expenses = () => {
     setExpenses(clonedExpenses);
   };
 
-  const saveExpenses = (e: React.FormEvent) => {
+  const saveExpenses = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     fetch("http://localhost:8080/api/v1/expenses", {
       method: "PATCH",
@@ -112,6 +123,7 @@ const Expenses = () => {
                     index={index}
                     expensesMetadata={expensesMetadata}
                     removeExpenseHandler={removeExpense}
+                    updateExpenseHandler={updateExpense}
                     key={expense.id}
                   />
                 ))}
