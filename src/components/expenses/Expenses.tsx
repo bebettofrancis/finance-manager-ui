@@ -12,10 +12,13 @@ import "./Expenses.css";
 const Expenses = () => {
   const [expensesMetadata, setExpensesMetadata] =
     useState<ExpensesMetadata | null>(null);
-  const [expenses, setExpenses] = useState<ExpenseProps[] | null>(null);
-  const [removedExpenses, setRemovedExpenses] = useState<ExpenseProps[] | null>(
-    null
-  );
+  const [expenses, setExpenses] = useState<{
+    allExpenses: ExpenseProps[] | null;
+    removedExpenses: ExpenseProps[] | null;
+  }>({
+    allExpenses: null,
+    removedExpenses: null,
+  });
 
   const getExpensesMetadata = async () => {
     const response: HttpResponse<GetExpensesMetadata | null> =
@@ -36,8 +39,8 @@ const Expenses = () => {
     if (expensesResponse === null) {
       return;
     }
-    setExpenses(
-      expensesResponse.map(
+    setExpenses({
+      allExpenses: expensesResponse.map(
         (expenseResponse) =>
           ({
             id: `expense-${expenseResponse.id}`,
@@ -46,8 +49,9 @@ const Expenses = () => {
             date: expenseResponse.date,
             amount: expenseResponse.amount,
           } as ExpenseProps)
-      )
-    );
+      ),
+      removedExpenses: null,
+    });
   };
 
   useEffect(() => {
@@ -66,55 +70,61 @@ const Expenses = () => {
       date: "",
       amount: 0,
     };
-    setExpenses((prev) => {
-      if (prev === null) {
-        return [newExpense];
+    setExpenses((prevExpenses) => {
+      const clonedExpenses = cloneDeep(prevExpenses);
+      if (clonedExpenses.allExpenses === null) {
+        clonedExpenses.allExpenses = [newExpense];
+        return clonedExpenses;
       }
-      const clonedExpenses = cloneDeep(prev);
-      clonedExpenses.push(newExpense);
+      clonedExpenses.allExpenses.push(newExpense);
       return clonedExpenses;
     });
   };
 
   const updateExpense = (index: number, expense: ExpenseProps) => {
-    setExpenses((prev) => {
-      if (prev === null || prev.length === 0 || index >= prev.length) {
-        return prev;
+    setExpenses((prevExpenses) => {
+      const clonedExpenses = cloneDeep(prevExpenses);
+      if (
+        clonedExpenses.allExpenses === null ||
+        clonedExpenses.allExpenses.length === 0 ||
+        index >= clonedExpenses.allExpenses.length
+      ) {
+        return prevExpenses;
       }
-      const clonedExpenses = cloneDeep(prev);
       if (expense.id.split("-")[0] !== "new") {
         expense.isUpdated = true;
       }
-      clonedExpenses[index] = expense;
+      clonedExpenses.allExpenses[index] = expense;
       return clonedExpenses;
     });
   };
 
   const removeExpense = (index: number) => {
-    setRemovedExpenses((prev) => {
-      if (expenses === null || expenses.length === 0) {
-        return prev;
+    setExpenses((prevExpenses) => {
+      const clonedExpenses = cloneDeep(prevExpenses);
+      if (
+        clonedExpenses.allExpenses === null ||
+        clonedExpenses.allExpenses.length === 0
+      ) {
+        return prevExpenses;
       }
-      const clonedRemovedExpense = cloneDeep(expenses[index]);
-      return prev === null
-        ? [clonedRemovedExpense]
-        : [...cloneDeep(prev), clonedRemovedExpense];
-    });
-    setExpenses((prev) => {
-      if (prev === null || prev.length === 0) {
-        return prev;
+      const toBeRemovedExpense = cloneDeep(clonedExpenses.allExpenses[index]);
+      clonedExpenses.allExpenses.splice(index, 1);
+      if (prevExpenses.removedExpenses === null) {
+        prevExpenses.removedExpenses = [toBeRemovedExpense];
+        return clonedExpenses;
       }
-      const clonedExpenses = cloneDeep(prev);
-      clonedExpenses.splice(index, 1);
+      prevExpenses.removedExpenses.push(toBeRemovedExpense);
       return clonedExpenses;
     });
   };
 
   const saveExpenses = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    console.debug(expenses);
     const requestBody = { update: [], insert: [] } as any;
-    if (removedExpenses) {
-      requestBody["delete"] = removedExpenses.map(
+    if (expenses.removedExpenses) {
+      requestBody["delete"] = expenses.removedExpenses.map(
         ({ id, categoryId, comment, date, amount }) => {
           return {
             id: +id.split("expense-")[1],
@@ -126,8 +136,8 @@ const Expenses = () => {
         }
       );
     }
-    if (expenses) {
-      expenses.forEach(
+    if (expenses.allExpenses) {
+      expenses.allExpenses.forEach(
         ({ id, isUpdated, categoryId, comment, date, amount }) => {
           if (isUpdated) {
             requestBody["update"].push({
@@ -149,13 +159,14 @@ const Expenses = () => {
         }
       );
     }
-    console.debug(requestBody);
     fetch("http://localhost:8080/api/v1/expenses", {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(requestBody),
+    }).then(() => {
+      getExpenses();
     });
   };
 
@@ -176,8 +187,8 @@ const Expenses = () => {
               </tr>
             </thead>
             <tbody>
-              {expenses &&
-                expenses.map((expense, index) => (
+              {expenses.allExpenses &&
+                expenses.allExpenses.map((expense, index) => (
                   <Expense
                     expenseProps={expense}
                     index={index}
