@@ -13,6 +13,9 @@ const Expenses = () => {
   const [expensesMetadata, setExpensesMetadata] =
     useState<ExpensesMetadata | null>(null);
   const [expenses, setExpenses] = useState<ExpenseProps[] | null>(null);
+  const [removedExpenses, setRemovedExpenses] = useState<ExpenseProps[] | null>(
+    null
+  );
 
   const getExpensesMetadata = async () => {
     const response: HttpResponse<GetExpensesMetadata | null> =
@@ -63,39 +66,96 @@ const Expenses = () => {
       date: "",
       amount: 0,
     };
-    setExpenses((prev) =>
-      prev === null ? [newExpense] : [...cloneDeep(prev), newExpense]
-    );
+    setExpenses((prev) => {
+      if (prev === null) {
+        return [newExpense];
+      }
+      const clonedExpenses = cloneDeep(prev);
+      clonedExpenses.push(newExpense);
+      return clonedExpenses;
+    });
   };
 
   const updateExpense = (index: number, expense: ExpenseProps) => {
     setExpenses((prev) => {
-      if (prev === null || index >= prev.length) {
+      if (prev === null || prev.length === 0 || index >= prev.length) {
         return prev;
       }
       const clonedExpenses = cloneDeep(prev);
+      if (expense.id.split("-")[0] !== "new") {
+        expense.isUpdated = true;
+      }
       clonedExpenses[index] = expense;
       return clonedExpenses;
     });
   };
 
   const removeExpense = (index: number) => {
-    const clonedExpenses = cloneDeep(expenses);
-    if (clonedExpenses == null) {
-      return;
-    }
-    clonedExpenses.splice(index, 1);
-    setExpenses(clonedExpenses);
+    setRemovedExpenses((prev) => {
+      if (expenses === null || expenses.length === 0) {
+        return prev;
+      }
+      const clonedRemovedExpense = cloneDeep(expenses[index]);
+      return prev === null
+        ? [clonedRemovedExpense]
+        : [...cloneDeep(prev), clonedRemovedExpense];
+    });
+    setExpenses((prev) => {
+      if (prev === null || prev.length === 0) {
+        return prev;
+      }
+      const clonedExpenses = cloneDeep(prev);
+      clonedExpenses.splice(index, 1);
+      return clonedExpenses;
+    });
   };
 
   const saveExpenses = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const requestBody = { update: [], insert: [] } as any;
+    if (removedExpenses) {
+      requestBody["delete"] = removedExpenses.map(
+        ({ id, categoryId, comment, date, amount }) => {
+          return {
+            id: +id.split("expense-")[1],
+            "category-id": categoryId,
+            comment,
+            date,
+            amount,
+          };
+        }
+      );
+    }
+    if (expenses) {
+      expenses.forEach(
+        ({ id, isUpdated, categoryId, comment, date, amount }) => {
+          if (isUpdated) {
+            requestBody["update"].push({
+              id: +id.split("expense-")[1],
+              "category-id": categoryId,
+              comment,
+              date,
+              amount,
+            });
+          } else if (id.split("-")[0] === "new") {
+            requestBody["insert"].push({
+              id: 0,
+              "category-id": categoryId,
+              comment,
+              date,
+              amount,
+            });
+          }
+        }
+      );
+    }
+    console.debug(requestBody);
     fetch("http://localhost:8080/api/v1/expenses", {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({}),
+      body: JSON.stringify(requestBody),
     });
   };
 

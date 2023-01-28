@@ -4,6 +4,7 @@ type ExpenseProps = {
   comment: string;
   date: string;
   amount: number;
+  isUpdated?: boolean;
 };
 
 export default ExpenseProps;

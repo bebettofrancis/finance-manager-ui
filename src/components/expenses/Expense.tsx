@@ -1,3 +1,4 @@
+import { cloneDeep } from "lodash";
 import React from "react";
 import ExpenseCategory from "../../types/expenses/ExpenseCategory";
 import ExpenseProps from "../../types/expenses/ExpenseProps";
@@ -16,16 +17,9 @@ const Expense: React.FC<{
   removeExpenseHandler,
   updateExpenseHandler,
 }) => {
-  const id = expenseProps.id;
-  let { amount, date, comment, categoryId } = expenseProps;
-
+  const { categoryId, amount, date, comment } = expenseProps;
   const removeExpense = () => {
     removeExpenseHandler(index);
-  };
-
-  const updateExpense = () => {
-    const expense = { id, amount, date, comment, categoryId } as ExpenseProps;
-    updateExpenseHandler(index, expense);
   };
 
   const getCategoriesDropdown = (categories: ExpenseCategory[] | null) => {
@@ -33,8 +27,9 @@ const Expense: React.FC<{
       <select
         value={categoryId}
         onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-          categoryId = +e.target.value;
-          updateExpense();
+          const expense = cloneDeep(expenseProps);
+          expense.categoryId = +e.target.value;
+          updateExpenseHandler(index, expense);
         }}
       >
         {categories &&
@@ -58,28 +53,30 @@ const Expense: React.FC<{
           type="number"
           value={amount}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-            amount = +e.target.value;
-            updateExpense();
+            const expense = cloneDeep(expenseProps);
+            expense.amount = +e.target.value;
+            updateExpenseHandler(index, expense);
           }}
         />
       </td>
       <td>
         <input
-          type="text"
-          value={date}
+          type="date"
+          value={date.split(" ")[0]}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-            date = e.target.value;
-            updateExpense();
+            const expense = cloneDeep(expenseProps);
+            expense.date = e.target.value;
+            updateExpenseHandler(index, expense);
           }}
         />
       </td>
       <td>
-        <input
-          type="text"
+        <textarea
           value={comment}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-            comment = e.target.value;
-            updateExpense();
+          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+            const expense = cloneDeep(expenseProps);
+            expense.comment = e.target.value;
+            updateExpenseHandler(index, expense);
           }}
         />
       </td>
