@@ -1,6 +1,7 @@
 import { cloneDeep, uniqueId } from "lodash";
 import { useCallback, useEffect, useState } from "react";
 import ExpenseProps from "../../types/expenses/ExpenseProps";
+import ExpenseType from "../../types/expenses/Expense";
 import ExpensesMetadata from "../../types/expenses/ExpensesMetadata";
 import GetExpenses from "../../types/expenses/http/GetExpenses";
 import GetExpensesMetadata from "../../types/expenses/http/GetExpensesMetadata";
@@ -20,12 +21,13 @@ const useExpenses = () => {
 
   const { sendHttp: getExpensesMetadataHttp } = useHttp();
   const { sendHttp: getExpensesHttp } = useHttp();
+  const { sendHttp: saveExpensesHttp } = useHttp();
 
   const getExpensesMetadata = useCallback(async () => {
     const response: HttpResponse<GetExpensesMetadata> | undefined =
-      await getExpensesMetadataHttp(
-        "http://localhost:8080/api/v1/expenses/metadata"
-      );
+      await getExpensesMetadataHttp({
+        url: "http://localhost:8080/api/v1/expenses/metadata",
+      });
     if (!(response && response.data)) {
       return;
     }
@@ -34,7 +36,7 @@ const useExpenses = () => {
 
   const getExpenses = useCallback(async () => {
     const response: HttpResponse<GetExpenses> | undefined =
-      await getExpensesHttp("http://localhost:8080/api/v1/expenses");
+      await getExpensesHttp({ url: "http://localhost:8080/api/v1/expenses" });
     if (!(response && response.data && response.data.expenses)) {
       return;
     }
@@ -121,7 +123,11 @@ const useExpenses = () => {
 
   const saveExpenses = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const requestBody = { update: [], insert: [] } as any;
+    const requestBody = {} as {
+      insert: ExpenseType[];
+      delete: ExpenseType[];
+      update: ExpenseType[];
+    };
     if (expenses.removedExpenses) {
       requestBody["delete"] = expenses.removedExpenses.map(
         ({ id, categoryId, comment, date, amount }) => {
@@ -139,6 +145,9 @@ const useExpenses = () => {
       expenses.allExpenses.forEach(
         ({ id, isUpdated, categoryId, comment, date, amount }) => {
           if (isUpdated) {
+            if (!requestBody["update"]) {
+              requestBody["update"] = [];
+            }
             requestBody["update"].push({
               id: +id.split("expense-")[1],
               "category-id": categoryId,
@@ -147,6 +156,9 @@ const useExpenses = () => {
               amount,
             });
           } else if (id.split("-")[0] === "new") {
+            if (!requestBody["insert"]) {
+              requestBody["insert"] = [];
+            }
             requestBody["insert"].push({
               id: 0,
               "category-id": categoryId,
@@ -158,12 +170,13 @@ const useExpenses = () => {
         }
       );
     }
-    fetch("http://localhost:8080/api/v1/expenses", {
+    if (!Object.keys(requestBody).length) {
+      return;
+    }
+    saveExpensesHttp({
+      url: "http://localhost:8080/api/v1/expenses",
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(requestBody),
+      body: requestBody,
     }).then(() => {
       getExpenses();
     });
